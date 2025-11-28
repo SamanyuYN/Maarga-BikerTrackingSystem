@@ -1,0 +1,40 @@
+{
+  "name": "maarga-app",
+  "version": "1.0.0",
+  "description": "MAARGA - Biker Tracking App with 500m geo-fencing",
+  "main": "server-mongo.js",
+  "scripts": {
+    "start": "node server-mongo.js",
+    "dev": "nodemon server-mongo.js",
+    "start-simple": "node server-simple.js",
+    "serve-local": "python -m http.server 8000",
+    "build": "echo 'No build step required'",
+    "setup-db": "node database/setup.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^7.2.0",
+    "mongoose": "^8.20.1",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "biker",
+    "tracking",
+    "geo-fencing",
+    "gps",
+    "location",
+    "real-time",
+    "websocket"
+  ],
+  "author": "MAARGA Team",
+  "license": "MIT"
+}

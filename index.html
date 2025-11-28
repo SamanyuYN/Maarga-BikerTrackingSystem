@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAARGA - Biker Tracking App</title>
+    
+    <!-- OpenLayers CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.5.2/ol.css" type="text/css">
+    <!-- OpenLayers JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo-section h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .logo-section p {
+            color: #666;
+            margin: 10px 0 30px 0;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .features {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features li {
+            padding: 8px 0;
+            color: #666;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .room-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .room-code {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 2px;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.tracking {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .logs-section {
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .logs-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-entry {
+            background: white;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .log-entry.join {
+            border-left-color: #28a745;
+        }
+
+        .log-entry.leave {
+            border-left-color: #dc3545;
+        }
+
+        .log-entry.location {
+            border-left-color: #17a2b8;
+        }
+
+        .log-entry.alert {
+            border-left-color: #ffc107;
+        }
+
+        .log-entry.emergency {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .log-timestamp {
+            color: #666;
+            font-size: 12px;
+            float: right;
+        }
+
+        .log-user {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .log-action {
+            color: #666;
+        }
+
+        .logs-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .logs-controls button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logs-controls button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .log-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .logo-section h1 {
+                font-size: 2em;
+            }
+        }
+
+        /* Map Styles */
+        .map-section {
+            margin: 20px 0;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .map-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .map-container {
+            height: 300px;
+            width: 100%;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            overflow: hidden;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .map-btn {
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+            width: auto !important;
+            min-width: 100px;
+            background: #667eea !important;
+        }
+
+        .map-btn:hover {
+            background: #5a6fd8 !important;
+        }
+
+        /* OpenLayers marker styles */
+        .user-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .current-user-marker {
+            background: #4444ff;
+            width: 25px;
+            height: 25px;
+        }
+
+        .other-user-marker {
+            background: #44ff44;
+        }
+
+        .leader-marker {
+            background: #ff4444;
+            border: 3px solid gold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen">
+            <div class="logo-section">
+                <h1>MAARGA</h1>
+                <p>Biker Tracking & Safety</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter your username" required>
+                    <span class="error-message" id="usernameError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter your phone number" required>
+                    <span class="error-message" id="phoneError"></span>
+                </div>
+                
+                <button type="submit" class="btn">Continue to Ride</button>
+            </form>
+
+            <div class="features">
+                <h3>🚴‍♂️ MAARGA Features</h3>
+                <ul>
+                    <li>Real-time GPS tracking</li>
+                    <li>500m geo-fence safety zone</li>
+                    <li>Smart speed notifications</li>
+                    <li>Emergency SOS alerts</li>
+                    <li>Group coordination</li>
+                    <li>Stop detection system</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Room Selection Screen -->
+        <div id="roomScreen" style="display: none;">
+            <div class="logo-section">
+                <h2>Choose Your Ride</h2>
+            </div>
+
+            <button class="btn" onclick="createRoom()">Create New Room</button>
+            <button class="btn secondary" onclick="joinRoom()">Join Existing Room</button>
+
+            <div class="room-section" id="createRoomSection">
+                <div class="form-group">
+                    <label for="destination">Destination</label>
+                    <input type="text" id="destination" placeholder="Enter destination">
+                </div>
+                <button class="btn" onclick="startRoom()">Start Ride</button>
+            </div>
+
+            <div class="room-section" id="joinRoomSection">
+                <div class="form-group">
+                    <label for="roomCode">Room Code</label>
+                    <input type="text" id="roomCodeInput" placeholder="Enter 6-digit code" maxlength="6">
+                </div>
+                <button class="btn secondary" onclick="joinExistingRoom()">Join Ride</button>
+            </div>
+        </div>
+
+        <!-- Tracking Screen -->
+        <div id="trackingScreen" style="display: none;">
+            <div class="logo-section">
+                <h2>🚴‍♂️ MAARGA ACTIVE</h2>
+                <div class="room-code" id="displayRoomCode"></div>
+            </div>
+
+            <div class="status connected">
+                <strong>📍 GPS Connected</strong><br>
+                Location tracking active
+            </div>
+
+            <div class="status tracking">
+                <strong>🛡️ Geo-fence Active</strong><br>
+                500m safety zone monitored
+            </div>
+
+            <div id="bikerStatus">
+                <h3>Group Status:</h3>
+                <p>🟢 All bikers within safety zone</p>
+                <p>👥 Bikers in group: <span id="bikerCount">1</span></p>
+                <p>🎯 Destination: <span id="trackingDestination">Loading...</span></p>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-section">
+                <h3>🗺️ Live Map View</h3>
+                <div id="map" class="map-container"></div>
+                <div class="map-controls">
+                    <button onclick="centerMapOnUser()" class="btn map-btn">📍 Center on Me</button>
+                    <button onclick="fitAllUsers()" class="btn map-btn">👥 Show All</button>
+                </div>
+            </div>
+
+            <button class="btn" onclick="simulateAlert()" style="margin-top: 20px;">
+                🚨 Test Emergency Alert
+            </button>
+
+            <button class="btn secondary" onclick="endRide()" style="margin-top: 10px;">
+                End Ride
+            </button>
+
+            <!-- Activity Logs Section -->
+            <div class="logs-section">
+                <h3>
+                    📋 Activity Logs
+                    <button onclick="toggleLogs()" class="btn" style="padding: 5px 10px; font-size: 12px; width: auto;">
+                        <span id="logsToggle">Hide</span>
+                    </button>
+                </h3>
+                
+                <div id="logsContent">
+                    <!-- Log Statistics -->
+                    <div class="log-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalJoins">0</span>
+                            <span class="stat-label">Joins</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalAlerts">0</span>
+                            <span class="stat-label">Alerts</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalUpdates">0</span>
+                            <span class="stat-label">Updates</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="sessionTime">0m</span>
+                            <span class="stat-label">Duration</span>
+                        </div>
+                    </div>
+
+                    <!-- Log Filters -->
+                    <div class="logs-controls">
+                        <button onclick="filterLogs('all')" class="active" id="filterAll">All</button>
+                        <button onclick="filterLogs('join')" id="filterJoin">Joins/Leaves</button>
+                        <button onclick="filterLogs('location')" id="filterLocation">Location</button>
+                        <button onclick="filterLogs('alert')" id="filterAlert">Alerts</button>
+                        <button onclick="filterLogs('emergency')" id="filterEmergency">Emergency</button>
+                        <button onclick="exportLogs()" style="margin-left: auto; background: #28a745; color: white;">Export</button>
+                        <button onclick="clearLogs()" style="background: #dc3545; color: white;">Clear</button>
+                    </div>
+
+                    <!-- Log Entries -->
+                    <div id="logEntries">
+                        <!-- Logs will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="success-message" id="successMessage"></div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentRoom = null;
+        let activityLogs = [];
+        let sessionStartTime = null;
+        let currentFilter = 'all';
+        let logsVisible = true;
+        let statsCounters = {
+            joins: 0,
+            alerts: 0,
+            updates: 0
+        };
+
+        // Geo-fencing System
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            // Haversine formula to calculate distance between two GPS coordinates
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; // Distance in meters
+        }
+
+        function isWithinGeofence(centerLat, centerLon, targetLat, targetLon, radiusMeters = 500) {
+            const distance = calculateDistance(centerLat, centerLon, targetLat, targetLon);
+            return {
+                withinFence: distance <= radiusMeters,
+                distance: distance
+            };
+        }
+
+        function checkGeofenceViolations(currentUserPos, allUsers, leaderPos) {
+            if (!leaderPos || !currentUserPos) return;
+
+            const result = isWithinGeofence(
+                leaderPos.latitude, 
+                leaderPos.longitude,
+                currentUserPos.latitude, 
+                currentUserPos.longitude,
+                500
+            );
+
+            if (!result.withinFence) {
+                const distance = Math.round(result.distance);
+                
+                // Show violation notification
+                showNotification(`⚠️ Outside Safe Zone! You're ${distance}m from the group leader`);
+                
+                // Log the violation
+                addLog('alert', currentUser.username, `outside geo-fence (${distance}m from leader)`, {
+                    distance: distance,
+                    coordinates: currentUserPos,
+                    leaderPosition: leaderPos
+                });
+
+                // Update UI status
+                updateGeofenceStatus(false, distance);
+            } else {
+                updateGeofenceStatus(true, Math.round(result.distance));
+            }
+        }
+
+        function updateGeofenceStatus(withinFence, distance) {
+            const statusElement = document.getElementById('bikerStatus');
+            if (statusElement) {
+                let statusText;
+                if (typeof distance === 'string') {
+                    // Handle status messages like 'GPS Error' or 'Waiting for leader GPS'
+                    statusText = `🟡 ${distance}`;
+                } else {
+                    statusText = withinFence 
+                        ? `🟢 Within safety zone (${distance}m from leader)`
+                        : `🔴 OUTSIDE safety zone! ${distance}m from leader`;
+                }
+                
+                // Update the status display
+                const statusP = statusElement.querySelector('p');
+                if (statusP) {
+                    statusP.textContent = statusText;
+                    if (typeof distance === 'string') {
+                        statusP.style.color = '#ffc107'; // Yellow for waiting/error states
+                    } else {
+                        statusP.style.color = withinFence ? '#28a745' : '#dc3545';
+                    }
+                }
+            }
+        }
+
+        function storeUserPosition(username, position) {
+            // Store real user positions in localStorage for cross-tab sharing
+            const userPositions = JSON.parse(localStorage.getItem('maarga_user_positions') || '{}');
+            userPositions[username] = {
+                ...position,
+                timestamp: Date.now(),
+                roomCode: currentRoom.code
+            };
+            localStorage.setItem('maarga_user_positions', JSON.stringify(userPositions));
+            
+            // Update map with new position if map is initialized
+            if (map) {
+                updateMapWithUsers();
+            }
+        }
+
+        function getLeaderRealPosition(leaderUsername) {
+            const userPositions = JSON.parse(localStorage.getItem('maarga_user_positions') || '{}');
+            const leaderPos = userPositions[leaderUsername];
+            
+            // Only use recent positions (within last 60 seconds)
+            if (leaderPos && (Date.now() - leaderPos.timestamp) < 60000) {
+                return {
+                    latitude: leaderPos.latitude,
+                    longitude: leaderPos.longitude
+                };
+            }
+            return null;
+        }
+
+        function checkGeofencingForAllUsers(currentUserPosition) {
+            // Store current user's real position for other users to access
+            storeUserPosition(currentUser.username, currentUserPosition);
+
+            // Get all users in current room
+            const allRooms = getAllActiveRooms();
+            const currentRoomUsers = allRooms[currentRoom.code] || [];
+            
+            if (currentRoomUsers.length < 2) {
+                // Only one user, show as leader
+                updateGeofenceStatus(true, 0);
+                return;
+            }
+            
+            // First user in room is the leader (room creator)
+            const leader = currentRoomUsers[0];
+            const isCurrentUserLeader = (leader.username === currentUser.username);
+            
+            if (isCurrentUserLeader) {
+                // Current user is leader - check if others are within range
+                updateGeofenceStatus(true, 0); // Leader is always "safe"
+                
+                // In a full implementation, you'd check distances to followers
+                // and alert if anyone is too far behind
+                
+            } else {
+                // Current user is follower - check distance to actual leader
+                // Try to get leader's real position from stored location data
+                const leaderPosition = getLeaderRealPosition(leader.username);
+                
+                if (leaderPosition) {
+                    checkGeofenceViolations(currentUserPosition, currentRoomUsers, leaderPosition);
+                } else {
+                    // No leader position available - show waiting status
+                    updateGeofenceStatus(true, 'Waiting for leader GPS');
+                    addLog('system', null, 'Waiting for leader location data for geo-fencing');
+                }
+            }
+        }
+
+        // Map Management System
+        let map = null;
+        let userMarkers = {};
+        let geofenceCircle = null;
+        let vectorSource = null;
+
+        function initializeMap() {
+            // Initialize OpenLayers map with OpenStreetMap
+            vectorSource = new ol.source.Vector();
+            
+            const vectorLayer = new ol.layer.Vector({
+                source: vectorSource,
+                style: function(feature) {
+                    return new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 10,
+                            fill: new ol.style.Fill({
+                                color: feature.get('markerColor') || '#4444ff'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#ffffff',
+                                width: 2
+                            })
+                        }),
+                        text: new ol.style.Text({
+                            text: feature.get('userInitial') || '?',
+                            fill: new ol.style.Fill({
+                                color: '#ffffff'
+                            }),
+                            font: 'bold 12px Arial'
+                        })
+                    });
+                }
+            });
+
+            map = new ol.Map({
+                target: 'map',
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM() // OpenStreetMap tiles
+                    }),
+                    vectorLayer
+                ],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([0, 0]), // Will be updated with real location
+                    zoom: 16
+                })
+            });
+
+            // Add click handler for map interaction
+            map.on('click', function(evt) {
+                const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+                    return feature;
+                });
+                
+                if (feature) {
+                    const username = feature.get('username');
+                    showNotification(`📍 ${username}'s location`);
+                }
+            });
+        }
+
+        function addUserMarker(username, lat, lng, isCurrentUser = false, isLeader = false) {
+            // Remove existing marker for this user
+            if (userMarkers[username]) {
+                vectorSource.removeFeature(userMarkers[username]);
+            }
+
+            // Determine marker color and properties
+            let markerColor = '#44ff44'; // Default green for other users
+            if (isCurrentUser) {
+                markerColor = '#4444ff'; // Blue for current user
+            }
+            if (isLeader) {
+                markerColor = '#ff4444'; // Red for leader
+            }
+
+            // Create marker feature
+            const marker = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([lng, lat])),
+                username: username,
+                isCurrentUser: isCurrentUser,
+                isLeader: isLeader,
+                markerColor: markerColor,
+                userInitial: username.charAt(0).toUpperCase()
+            });
+
+            // Add to map
+            vectorSource.addFeature(marker);
+            userMarkers[username] = marker;
+
+            // Center map on current user's first location
+            if (isCurrentUser && Object.keys(userMarkers).length === 1) {
+                map.getView().setCenter(ol.proj.fromLonLat([lng, lat]));
+            }
+        }
+
+        function addGeofenceCircle(centerLat, centerLng, radiusMeters = 500) {
+            // Remove existing geofence circle
+            if (geofenceCircle) {
+                vectorSource.removeFeature(geofenceCircle);
+            }
+
+            // Create circle feature (approximate circle using polygon)
+            const center = ol.proj.fromLonLat([centerLng, centerLat]);
+            const circle = new ol.geom.Circle(center, radiusMeters);
+            const circleFeature = new ol.Feature(circle.transform('EPSG:3857', 'EPSG:4326').transform('EPSG:4326', 'EPSG:3857'));
+            
+            circleFeature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#42a5f5',
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(66, 165, 245, 0.2)'
+                })
+            }));
+
+            vectorSource.addFeature(circleFeature);
+            geofenceCircle = circleFeature;
+        }
+
+        function centerMapOnUser() {
+            const currentUserMarker = userMarkers[currentUser.username];
+            if (currentUserMarker) {
+                const geometry = currentUserMarker.getGeometry();
+                map.getView().setCenter(geometry.getCoordinates());
+                map.getView().setZoom(18);
+            } else {
+                showNotification('📍 Current location not available');
+            }
+        }
+
+        function fitAllUsers() {
+            const features = Object.values(userMarkers);
+            if (features.length > 0) {
+                const extent = vectorSource.getExtent();
+                map.getView().fit(extent, {
+                    padding: [20, 20, 20, 20],
+                    maxZoom: 16
+                });
+            } else {
+                showNotification('👥 No users to show on map');
+            }
+        }
+
+        function updateMapWithUsers() {
+            // Get all users in current room
+            const allRooms = getAllActiveRooms();
+            const currentRoomUsers = allRooms[currentRoom.code] || [];
+            const userPositions = JSON.parse(localStorage.getItem('maarga_user_positions') || '{}');
+
+            // Clear old markers
+            Object.values(userMarkers).forEach(marker => {
+                vectorSource.removeFeature(marker);
+            });
+            userMarkers = {};
+
+            // Add markers for all users with positions
+            currentRoomUsers.forEach((user, index) => {
+                const position = userPositions[user.username];
+                if (position && position.roomCode === currentRoom.code) {
+                    const isCurrentUser = user.username === currentUser.username;
+                    const isLeader = index === 0; // First user is leader
+                    
+                    addUserMarker(
+                        user.username,
+                        position.latitude,
+                        position.longitude,
+                        isCurrentUser,
+                        isLeader
+                    );
+
+                    // Add geofence around leader
+                    if (isLeader) {
+                        addGeofenceCircle(position.latitude, position.longitude, 500);
+                    }
+                }
+            });
+        }
+
+        // Logging System
+        function addLog(type, user, action, details = {}) {
+            const timestamp = new Date();
+            const logEntry = {
+                id: Date.now(),
+                type: type, // 'join', 'leave', 'location', 'alert', 'emergency', 'system'
+                user: user,
+                action: action,
+                details: details,
+                timestamp: timestamp,
+                roomCode: currentRoom ? currentRoom.code : null, // Track which room this log belongs to
+                sessionId: sessionStartTime // Track which session this log belongs to
+            };
+            
+            activityLogs.unshift(logEntry); // Add to beginning
+            
+            // Keep only last 100 logs to prevent memory issues
+            if (activityLogs.length > 100) {
+                activityLogs = activityLogs.slice(0, 100);
+            }
+            
+            // Update statistics
+            updateLogStats(type);
+            
+            // Update display if logs are visible
+            if (document.getElementById('logEntries')) {
+                displayLogs();
+            }
+            
+            // Store in localStorage for persistence
+            localStorage.setItem('maarga_logs', JSON.stringify(activityLogs));
+            localStorage.setItem('maarga_session_start', sessionStartTime);
+        }
+
+        function updateLogStats(type) {
+            switch(type) {
+                case 'join':
+                case 'leave':
+                    statsCounters.joins++;
+                    break;
+                case 'alert':
+                case 'emergency':
+                    statsCounters.alerts++;
+                    break;
+                case 'location':
+                case 'system':
+                    statsCounters.updates++;
+                    break;
+            }
+            
+            if (document.getElementById('totalJoins')) {
+                document.getElementById('totalJoins').textContent = statsCounters.joins;
+                document.getElementById('totalAlerts').textContent = statsCounters.alerts;
+                document.getElementById('totalUpdates').textContent = statsCounters.updates;
+                
+                // Update session duration
+                if (sessionStartTime) {
+                    const duration = Math.floor((Date.now() - sessionStartTime) / 60000);
+                    document.getElementById('sessionTime').textContent = duration + 'm';
+                }
+            }
+        }
+
+        function displayLogs() {
+            const logContainer = document.getElementById('logEntries');
+            if (!logContainer) return;
+            
+            const filteredLogs = currentFilter === 'all' 
+                ? activityLogs 
+                : activityLogs.filter(log => log.type === currentFilter);
+            
+            logContainer.innerHTML = '';
+            
+            if (filteredLogs.length === 0) {
+                logContainer.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No logs to display</p>';
+                return;
+            }
+            
+            filteredLogs.forEach(log => {
+                const logDiv = document.createElement('div');
+                logDiv.className = `log-entry ${log.type}`;
+                
+                const timeStr = log.timestamp.toLocaleTimeString();
+                const userStr = log.user ? `<span class="log-user">${log.user}</span>` : '<span class="log-user">System</span>';
+                
+                let logContent = '';
+                switch(log.type) {
+                    case 'join':
+                        logContent = `${userStr} <span class="log-action">joined the room</span>`;
+                        if (log.details.roomCode) {
+                            logContent += ` <small>(Room: ${log.details.roomCode})</small>`;
+                        }
+                        break;
+                    case 'leave':
+                        logContent = `${userStr} <span class="log-action">left the room</span>`;
+                        break;
+                    case 'location':
+                        logContent = `${userStr} <span class="log-action">updated location</span>`;
+                        if (log.details.speed !== undefined) {
+                            logContent += ` <small>(Speed: ${(log.details.speed * 3.6).toFixed(1)} km/h)</small>`;
+                        }
+                        break;
+                    case 'alert':
+                        logContent = `${userStr} <span class="log-action">${log.action}</span>`;
+                        break;
+                    case 'emergency':
+                        logContent = `🚨 ${userStr} <span class="log-action">${log.action}</span>`;
+                        break;
+                    case 'system':
+                        logContent = `<span class="log-action">${log.action}</span>`;
+                        break;
+                    default:
+                        logContent = `${userStr} <span class="log-action">${log.action}</span>`;
+                }
+                
+                logDiv.innerHTML = `
+                    ${logContent}
+                    <span class="log-timestamp">${timeStr}</span>
+                `;
+                
+                logContainer.appendChild(logDiv);
+            });
+        }
+
+        function filterLogs(type) {
+            currentFilter = type;
+            
+            // Update button states
+            document.querySelectorAll('.logs-controls button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('filter' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+            
+            displayLogs();
+        }
+
+        function toggleLogs() {
+            const logsContent = document.getElementById('logsContent');
+            const toggleBtn = document.getElementById('logsToggle');
+            
+            logsVisible = !logsVisible;
+            logsContent.style.display = logsVisible ? 'block' : 'none';
+            toggleBtn.textContent = logsVisible ? 'Hide' : 'Show';
+        }
+
+        function loadPreviousLogs() {
+            const storedLogs = localStorage.getItem('maarga_logs');
+            const storedSessionStart = localStorage.getItem('maarga_session_start');
+            
+            if (storedLogs) {
+                try {
+                    activityLogs = JSON.parse(storedLogs).map(log => ({
+                        ...log,
+                        timestamp: new Date(log.timestamp)
+                    }));
+                    
+                    // Recalculate stats
+                    statsCounters = { joins: 0, alerts: 0, updates: 0 };
+                    activityLogs.forEach(log => updateLogStats(log.type));
+                } catch (e) {
+                    console.log('Error loading previous logs:', e);
+                }
+            }
+            
+            if (storedSessionStart) {
+                sessionStartTime = parseInt(storedSessionStart);
+            }
+        }
+
+        function clearLogs() {
+            if (confirm('Are you sure you want to clear all activity logs?')) {
+                activityLogs = [];
+                statsCounters = { joins: 0, alerts: 0, updates: 0 };
+                localStorage.removeItem('maarga_logs');
+                displayLogs();
+                updateLogStats('system'); // Update display
+                addLog('system', null, 'Activity logs cleared');
+            }
+        }
+
+        function clearLogsForNewSession() {
+            // Automatically clear logs when starting/joining a new room
+            // This prevents logs from previous sessions mixing with new ones
+            activityLogs = [];
+            statsCounters = { joins: 0, alerts: 0, updates: 0 };
+            sessionStartTime = Date.now();
+            localStorage.removeItem('maarga_logs');
+            localStorage.setItem('maarga_session_start', sessionStartTime);
+            
+            // Also clear old room data and user positions from other tabs
+            localStorage.removeItem('maarga_all_rooms');
+            localStorage.removeItem('maarga_user_positions');
+            
+            // Clean up old room data (keep only recent rooms)
+            cleanupOldRoomData();
+        }
+
+        function cleanupOldRoomData() {
+            const allRoomsData = JSON.parse(localStorage.getItem('maarga_room_data') || '{}');
+            const currentTime = new Date().getTime();
+            const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+            
+            Object.keys(allRoomsData).forEach(roomCode => {
+                const roomData = allRoomsData[roomCode];
+                const roomAge = currentTime - new Date(roomData.createdAt).getTime();
+                
+                if (roomAge > maxAge) {
+                    delete allRoomsData[roomCode];
+                }
+            });
+            
+            localStorage.setItem('maarga_room_data', JSON.stringify(allRoomsData));
+        }
+
+        // Location Permission Management System
+        let locationPermissionStatus = 'unknown'; // 'granted', 'denied', 'unknown'
+        let watchId = null; // Store the watch ID for continuous tracking
+        let lastLocationTime = 0; // Prevent redundant location requests
+        
+        async function requestLocationPermission() {
+            // Check if geolocation is supported
+            if (!navigator.geolocation) {
+                locationPermissionStatus = 'denied';
+                return false;
+            }
+            
+            // Check if permission API is available (modern browsers)
+            if (navigator.permissions) {
+                try {
+                    const permission = await navigator.permissions.query({name: 'geolocation'});
+                    locationPermissionStatus = permission.state;
+                    
+                    // Listen for permission changes
+                    permission.onchange = () => {
+                        locationPermissionStatus = permission.state;
+                        handlePermissionChange();
+                    };
+                    
+                    if (permission.state === 'granted') {
+                        return true;
+                    } else if (permission.state === 'denied') {
+                        return false;
+                    }
+                } catch (e) {
+                    console.log('Permissions API not fully supported, using fallback');
+                }
+            }
+            
+            // Fallback: Try to get position to check permission
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        locationPermissionStatus = 'granted';
+                        // Store initial location
+                        if (currentUser) {
+                            currentUser.location = {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            };
+                        }
+                        resolve(true);
+                    },
+                    (error) => {
+                        if (error.code === error.PERMISSION_DENIED) {
+                            locationPermissionStatus = 'denied';
+                        } else {
+                            locationPermissionStatus = 'unknown';
+                        }
+                        resolve(false);
+                    },
+                    {
+                        enableHighAccuracy: false, // Use less aggressive settings for initial check
+                        timeout: 5000,
+                        maximumAge: 300000 // Accept 5-minute old position for permission check
+                    }
+                );
+            });
+        }
+        
+        function handlePermissionChange() {
+            if (locationPermissionStatus === 'denied') {
+                showNotification('⚠️ Location access denied. GPS tracking disabled.');
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+            } else if (locationPermissionStatus === 'granted' && !watchId) {
+                startContinuousLocationTracking();
+            }
+        }
+        
+        function startContinuousLocationTracking() {
+            if (locationPermissionStatus !== 'granted' || watchId) {
+                return; // Already tracking or no permission
+            }
+            
+            // Use watchPosition for continuous tracking instead of setInterval
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const now = Date.now();
+                    // Throttle updates to prevent spam (minimum 20 seconds between updates)
+                    if (now - lastLocationTime < 20000) {
+                        return;
+                    }
+                    lastLocationTime = now;
+                    
+                    const currentPosition = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+
+                    // Update user location
+                    if (currentUser) {
+                        currentUser.location = currentPosition;
+                    }
+
+                    addLog('location', currentUser ? currentUser.username : 'Unknown', 'location updated', {
+                        speed: position.coords.speed || 0,
+                        coordinates: {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        },
+                        accuracy: position.coords.accuracy,
+                        realUser: true
+                    });
+
+                    // Check geo-fencing if we have other users
+                    if (currentRoom) {
+                        checkGeofencingForAllUsers(currentPosition);
+                    }
+                },
+                (error) => {
+                    // Only log GPS errors occasionally to avoid spam
+                    const now = Date.now();
+                    if (now - lastLocationTime > 120000) { // Only log every 2 minutes
+                        lastLocationTime = now;
+                        
+                        addLog('alert', currentUser ? currentUser.username : 'Unknown', 'GPS location issue', {
+                            error: error.message,
+                            errorCode: error.code,
+                            timestamp: new Date().toISOString(),
+                            realUser: true
+                        });
+
+                        if (error.code === error.PERMISSION_DENIED) {
+                            locationPermissionStatus = 'denied';
+                            handlePermissionChange();
+                        }
+                    }
+                    
+                    // Update UI to show GPS unavailable
+                    if (currentRoom) {
+                        updateGeofenceStatus(false, 'GPS Error');
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 30000, // Longer timeout for better GPS lock
+                    maximumAge: 60000 // Accept 1-minute old position to reduce battery drain
+                }
+            );
+        }
+        
+        function stopLocationTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            
+            // Simple validation
+            let isValid = true;
+            
+            if (username.length < 3) {
+                document.getElementById('usernameError').textContent = 'Username must be at least 3 characters';
+                document.getElementById('usernameError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('usernameError').style.display = 'none';
+            }
+            
+            const phoneRegex = /^[\d\s\-\(\)\+]{10,15}$/;
+            if (!phoneRegex.test(phoneNumber)) {
+                document.getElementById('phoneError').textContent = 'Please enter a valid phone number';
+                document.getElementById('phoneError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('phoneError').style.display = 'none';
+            }
+            
+            if (isValid) {
+                currentUser = { username, phoneNumber };
+                sessionStartTime = Date.now();
+                
+                // Load previous logs
+                loadPreviousLogs();
+                
+                // Log user login
+                addLog('system', username, 'logged into MAARGA app');
+                
+                // Request location permission once and remember the result
+                showSuccess('🔄 Checking location permissions...');
+                
+                const hasLocationPermission = await requestLocationPermission();
+                
+                if (hasLocationPermission) {
+                    showSuccess('✅ GPS location access granted!');
+                    // Start continuous location tracking
+                    startContinuousLocationTracking();
+                } else {
+                    if (locationPermissionStatus === 'denied') {
+                        showSuccess('❌ Location access denied - GPS tracking disabled');
+                        alert('⚠️ MAARGA works best with GPS access for real-time tracking.\n\nTo enable location:\n1. Click the location icon in your browser address bar\n2. Select "Allow" for location access\n3. Refresh the page');
+                    } else {
+                        showSuccess('⚠️ Unable to access GPS - Please check your settings');
+                    }
+                }
+                
+                setTimeout(() => showRoomScreen(), 2000);
+            }
+        });
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        function showRoomScreen() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('roomScreen').style.display = 'block';
+        }
+
+        function createRoom() {
+            document.getElementById('createRoomSection').style.display = 'block';
+            document.getElementById('joinRoomSection').style.display = 'none';
+        }
+
+        function joinRoom() {
+            document.getElementById('joinRoomSection').style.display = 'block';
+            document.getElementById('createRoomSection').style.display = 'none';
+        }
+
+        function generateRoomCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function startRoom() {
+            const destination = document.getElementById('destination').value.trim();
+            if (!destination) {
+                alert('Please enter a destination');
+                return;
+            }
+
+            // Clear previous session logs when starting a new room
+            clearLogsForNewSession();
+
+            currentRoom = {
+                code: generateRoomCode(),
+                destination: destination,
+                leader: currentUser.username,
+                bikers: [currentUser]
+            };
+
+            // Store room data for other users to access
+            storeRoomData(currentRoom);
+
+            // Log room creation
+            addLog('system', currentUser.username, `created room ${currentRoom.code}`, {
+                destination: destination,
+                roomCode: currentRoom.code
+            });
+            
+            addLog('join', currentUser.username, 'joined as room leader', {
+                roomCode: currentRoom.code,
+                isLeader: true
+            });
+
+            showTrackingScreen();
+        }
+
+        function joinExistingRoom() {
+            const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+            if (!roomCode || roomCode.length !== 6) {
+                alert('Please enter a valid 6-digit room code');
+                return;
+            }
+
+            // Check if room exists before joining
+            const roomData = getRoomData(roomCode);
+            if (!roomData) {
+                alert(`Room ${roomCode} not found or may have expired.\n\nPlease check the room code or ask the room creator to share it again.`);
+                return;
+            }
+
+            // Clear previous session logs when joining a different room
+            clearLogsForNewSession();
+
+            // Use actual room data from creator (already validated above)
+            currentRoom = {
+                code: roomCode,
+                destination: roomData.destination,
+                leader: roomData.leader,
+                bikers: [currentUser]
+            };
+            
+            addLog('system', null, `joined room "${roomData.destination}" created by ${roomData.leader}`);
+
+            // Log room joining
+            addLog('join', currentUser.username, 'joined existing room', {
+                roomCode: roomCode,
+                isLeader: false
+            });
+
+            showTrackingScreen();
+        }
+
+        function showTrackingScreen() {
+            document.getElementById('roomScreen').style.display = 'none';
+            document.getElementById('trackingScreen').style.display = 'block';
+            document.getElementById('displayRoomCode').textContent = `Room: ${currentRoom.code}`;
+            document.getElementById('trackingDestination').textContent = currentRoom.destination;
+            
+            // Initialize notifications now that user is actively using tracking
+            initializeNotifications();
+            
+            // Initialize logs display
+            displayLogs();
+            
+            // Show system messages
+            setTimeout(() => {
+                showNotification('🔔 GPS tracking started successfully!');
+                addLog('system', null, 'GPS tracking activated');
+            }, 2000);
+
+            setTimeout(() => {
+                showNotification('🛡️ Geo-fence activated - 500m safety zone');
+                addLog('system', null, 'Geo-fence system enabled (500m radius)');
+            }, 4000);
+
+            // Initialize map
+            setTimeout(() => {
+                initializeMap();
+                showNotification('🗺️ Map initialized - Loading user locations...');
+            }, 1000);
+
+            // Initialize real user tracking
+            updateActiveRooms();
+            checkForRealUsers();
+            startRealLocationUpdates();
+        }
+
+        function checkForRealUsers() {
+            // Clean up inactive users first
+            cleanupInactiveUsers();
+            
+            // Get list of real users from localStorage across all tabs
+            const allRooms = getAllActiveRooms();
+            const currentRoomUsers = allRooms[currentRoom.code] || [];
+            
+            // Update our own activity timestamp
+            updateActiveRooms();
+            
+            // Update biker count with real users only
+            const realUserCount = currentRoomUsers.length;
+            document.getElementById('bikerCount').textContent = realUserCount;
+            
+            // Log new real users (not simulated ones)
+            currentRoomUsers.forEach(user => {
+                if (user.username !== currentUser.username && !hasUserBeenLogged(user.username)) {
+                    addLog('join', user.username, 'joined the room', {
+                        roomCode: currentRoom.code,
+                        realUser: true
+                    });
+                    markUserAsLogged(user.username);
+                }
+            });
+            
+            // Update map with current users if map is initialized
+            if (map) {
+                updateMapWithUsers();
+            }
+            
+            // Continue checking every 10 seconds
+            setTimeout(() => {
+                checkForRealUsers();
+            }, 10000);
+        }
+
+        function getAllActiveRooms() {
+            try {
+                return JSON.parse(localStorage.getItem('maarga_all_rooms') || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function storeRoomData(roomData) {
+            // Store complete room information for joiners to access
+            const allRoomsData = JSON.parse(localStorage.getItem('maarga_room_data') || '{}');
+            allRoomsData[roomData.code] = {
+                code: roomData.code,
+                destination: roomData.destination,
+                leader: roomData.leader,
+                createdAt: new Date().toISOString(),
+                createdBy: currentUser.username
+            };
+            localStorage.setItem('maarga_room_data', JSON.stringify(allRoomsData));
+        }
+
+        function getRoomData(roomCode) {
+            // Retrieve room information for joiners
+            const allRoomsData = JSON.parse(localStorage.getItem('maarga_room_data') || '{}');
+            return allRoomsData[roomCode] || null;
+        }
+
+        function updateActiveRooms() {
+            const allRooms = getAllActiveRooms();
+            if (!allRooms[currentRoom.code]) {
+                allRooms[currentRoom.code] = [];
+            }
+            
+            // Add current user if not already in list
+            const existingUserIndex = allRooms[currentRoom.code].findIndex(u => u.username === currentUser.username);
+            if (existingUserIndex === -1) {
+                allRooms[currentRoom.code].push({
+                    username: currentUser.username,
+                    phoneNumber: currentUser.phoneNumber,
+                    joinedAt: new Date().toISOString(),
+                    lastActive: new Date().toISOString()
+                });
+            } else {
+                // Update last active time
+                allRooms[currentRoom.code][existingUserIndex].lastActive = new Date().toISOString();
+            }
+            
+            localStorage.setItem('maarga_all_rooms', JSON.stringify(allRooms));
+        }
+
+        function hasUserBeenLogged(username) {
+            return activityLogs.some(log => 
+                log.type === 'join' && 
+                log.user === username && 
+                log.details.realUser
+            );
+        }
+
+        function markUserAsLogged(username) {
+            // This is handled by the addLog function itself
+        }
+
+        function cleanupInactiveUsers() {
+            const allRooms = getAllActiveRooms();
+            const currentTime = new Date().getTime();
+            const inactiveThreshold = 5 * 60 * 1000; // 5 minutes
+            
+            Object.keys(allRooms).forEach(roomCode => {
+                allRooms[roomCode] = allRooms[roomCode].filter(user => {
+                    const lastActive = new Date(user.lastActive).getTime();
+                    return currentTime - lastActive < inactiveThreshold;
+                });
+                
+                // Remove empty rooms
+                if (allRooms[roomCode].length === 0) {
+                    delete allRooms[roomCode];
+                }
+            });
+            
+            localStorage.setItem('maarga_all_rooms', JSON.stringify(allRooms));
+        }
+
+        function startRealLocationUpdates() {
+            // Use the continuous tracking system instead of interval-based updates
+            if (locationPermissionStatus === 'granted') {
+                startContinuousLocationTracking();
+            } else if (locationPermissionStatus === 'denied') {
+                addLog('alert', currentUser.username, 'GPS tracking disabled - location permission denied');
+                updateGeofenceStatus(false, 'Location Access Denied');
+            } else {
+                // Try to request permission again
+                requestLocationPermission().then(hasPermission => {
+                    if (hasPermission) {
+                        startContinuousLocationTracking();
+                    } else {
+                        addLog('alert', currentUser.username, 'GPS tracking unavailable - unable to access location');
+                        updateGeofenceStatus(false, 'GPS Unavailable');
+                    }
+                });
+            }
+        }
+
+        function simulateAlert() {
+            // Get real users from current room
+            const allRooms = getAllActiveRooms();
+            const currentRoomUsers = allRooms[currentRoom.code] || [currentUser];
+            const randomUser = currentRoomUsers[Math.floor(Math.random() * currentRoomUsers.length)];
+            
+            const alerts = [
+                {
+                    message: `⚠️ SLOW DOWN: Biker "${randomUser.username}" is falling behind the geo-fence!`,
+                    type: 'alert',
+                    user: randomUser.username,
+                    action: 'fell behind geo-fence - leader notified to slow down'
+                },
+                {
+                    message: `🚨 EMERGENCY: No response from "${randomUser.username}" - Last location shared`,
+                    type: 'emergency',
+                    user: randomUser.username,
+                    action: 'emergency detected - no response to check-in'
+                },
+                {
+                    message: `📍 STOP DETECTED: "${randomUser.username}" may have stopped. Waiting for response...`,
+                    type: 'alert',
+                    user: randomUser.username,
+                    action: 'stop detected - awaiting confirmation'
+                },
+                {
+                    message: '✅ ALL CLEAR: All bikers back within safety zone',
+                    type: 'system',
+                    user: null,
+                    action: 'all members returned to geo-fence safety zone'
+                },
+                {
+                    message: '🎯 DESTINATION REACHED: Welcome to your destination!',
+                    type: 'system',
+                    user: null,
+                    action: 'group reached destination successfully'
+                }
+            ];
+
+            const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+            showNotification(randomAlert.message);
+            
+            // Log the alert
+            addLog(randomAlert.type, randomAlert.user, randomAlert.action);
+
+            // Vibrate if supported
+            if (navigator.vibrate) {
+                navigator.vibrate([300, 200, 300]);
+            }
+        }
+
+        let notificationPermissionRequested = false;
+        
+        async function requestNotificationPermission() {
+            if ('Notification' in window && !notificationPermissionRequested) {
+                notificationPermissionRequested = true;
+                if (Notification.permission === 'default') {
+                    await Notification.requestPermission();
+                }
+            }
+        }
+        
+        function showNotification(message) {
+            // Browser notification (only if permission already granted)
+            if (Notification.permission === 'granted') {
+                new Notification('MAARGA Alert', { 
+                    body: message,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚴‍♂️</text></svg>',
+                    requireInteraction: false // Don't require user to dismiss
+                });
+            }
+
+            // In-app notification (less intrusive than alert for minor updates)
+            if (message.includes('🔔') || message.includes('🛡️') || message.includes('🗺️')) {
+                // For system notifications, use console.log instead of alert
+                console.log('MAARGA:', message);
+                
+                // Show briefly in UI instead of blocking alert
+                const successDiv = document.getElementById('successMessage');
+                if (successDiv) {
+                    successDiv.textContent = message;
+                    successDiv.style.display = 'block';
+                    successDiv.style.background = '#e3f2fd';
+                    successDiv.style.color = '#1565c0';
+                    setTimeout(() => {
+                        successDiv.style.display = 'none';
+                    }, 3000);
+                }
+            } else if (message.includes('⚠️') || message.includes('🚨') || message.includes('EMERGENCY')) {
+                // Only use alert for important warnings/emergencies
+                alert(message);
+            } else {
+                // For other notifications, use a less intrusive method
+                console.log('MAARGA:', message);
+            }
+        }
+
+        function endRide() {
+            if (confirm('Are you sure you want to end the ride?')) {
+                // Stop location tracking to preserve battery and prevent further prompts
+                stopLocationTracking();
+                
+                // Log ride end
+                addLog('leave', currentUser.username, 'ended the ride session');
+                addLog('system', null, `ride session completed - duration: ${Math.floor((Date.now() - sessionStartTime) / 60000)} minutes`);
+                
+                // Remove current user from active rooms
+                const allRooms = getAllActiveRooms();
+                if (allRooms[currentRoom.code]) {
+                    allRooms[currentRoom.code] = allRooms[currentRoom.code].filter(
+                        user => user.username !== currentUser.username
+                    );
+                    if (allRooms[currentRoom.code].length === 0) {
+                        delete allRooms[currentRoom.code];
+                    }
+                    localStorage.setItem('maarga_all_rooms', JSON.stringify(allRooms));
+                }
+                
+                showNotification('🏁 Ride ended safely. Thank you for using MAARGA!');
+                
+                // Clear current session data and return to room selection
+                currentRoom = null;
+                currentUser = null;
+                setTimeout(() => {
+                    document.getElementById('trackingScreen').style.display = 'none';
+                    document.getElementById('roomScreen').style.display = 'block';
+                }, 2000);
+            }
+        }
+
+        function exportLogs() {
+            if (activityLogs.length === 0) {
+                alert('No logs to export');
+                return;
+            }
+            
+            const exportData = {
+                session: {
+                    user: currentUser.username,
+                    room: currentRoom ? currentRoom.code : null,
+                    destination: currentRoom ? currentRoom.destination : null,
+                    startTime: new Date(sessionStartTime).toISOString(),
+                    duration: Math.floor((Date.now() - sessionStartTime) / 60000) + ' minutes',
+                    exportTime: new Date().toISOString()
+                },
+                statistics: statsCounters,
+                logs: activityLogs.map(log => ({
+                    timestamp: log.timestamp.toISOString(),
+                    type: log.type,
+                    user: log.user,
+                    action: log.action,
+                    details: log.details
+                }))
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `MAARGA_logs_${currentUser.username}_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            addLog('system', currentUser.username, 'exported activity logs');
+        }
+
+        // Initialize notification permission when user starts tracking (not on page load)
+        function initializeNotifications() {
+            if ('Notification' in window && Notification.permission === 'default' && !notificationPermissionRequested) {
+                requestNotificationPermission();
+            }
+        }
+        
+        // Cleanup when page is unloaded
+        window.addEventListener('beforeunload', function(e) {
+            stopLocationTracking();
+        });
+        
+        // Cleanup when tab becomes hidden (mobile apps going to background)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Tab is hidden - continue tracking but throttle updates
+                console.log('MAARGA: App moved to background, continuing location tracking');
+            } else {
+                // Tab is visible again - resume normal operation
+                if (currentRoom && locationPermissionStatus === 'granted' && !watchId) {
+                    startContinuousLocationTracking();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
