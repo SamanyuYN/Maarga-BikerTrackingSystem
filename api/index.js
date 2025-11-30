@@ -4,19 +4,30 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
 // MongoDB Connection
+let isMongoConnected = false;
 const connectDB = async () => {
     try {
         const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://maarga-admin:C0meFast2836@maarga-cluster.bwdogps.mongodb.net/maarga-production?retryWrites=true&w=majority&appName=maarga-cluster';
         await mongoose.connect(mongoURI);
         console.log('✅ MongoDB connected successfully');
+        isMongoConnected = true;
     } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
+        console.error('❌ MongoDB connection error:', error.message);
+        console.log('🔄 App will run with in-memory storage as fallback');
+        isMongoConnected = false;
     }
 };
+
+// In-memory fallback storage
+const memoryUsers = new Map();
+const memoryRooms = new Map();
+const memoryLocations = new Map();
 
 // MongoDB Schemas
 const UserSchema = new mongoose.Schema({
@@ -59,145 +70,16 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-// Serve main page
+// Serve main page - the full index.html with maps and tracking
 app.get('/', (req, res) => {
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>MAARGA - Biker Tracking System</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
-            .container { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
-            input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; }
-            button { background: #007bff; color: white; cursor: pointer; }
-            button:hover { background: #0056b3; }
-            .error { color: red; margin: 10px 0; }
-            .success { color: green; margin: 10px 0; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🚴‍♂️ MAARGA</h1>
-            <p>Biker Tracking System</p>
-            
-            <form id="loginForm">
-                <input type="text" id="username" placeholder="Enter your name" required>
-                <input type="password" id="password" placeholder="Enter password" required>
-                <button type="submit">Login</button>
-            </form>
-            
-            <div id="message"></div>
-            
-            <div id="roomSection" style="display:none;">
-                <h3>Create or Join Room</h3>
-                <input type="text" id="destination" placeholder="Destination">
-                <button onclick="createRoom()">Create Room</button>
-                
-                <hr>
-                
-                <input type="text" id="roomCode" placeholder="Room Code">
-                <button onclick="joinRoom()">Join Room</button>
-            </div>
-        </div>
-        
-        <script>
-            let currentUser = null;
-            
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                try {
-                    const response = await fetch('/api/users/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (response.ok) {
-                        currentUser = data.user;
-                        document.getElementById('message').innerHTML = '<div class="success">Login successful!</div>';
-                        document.getElementById('roomSection').style.display = 'block';
-                    } else {
-                        document.getElementById('message').innerHTML = '<div class="error">' + data.error + '</div>';
-                    }
-                } catch (error) {
-                    document.getElementById('message').innerHTML = '<div class="error">Connection error</div>';
-                }
-            });
-            
-            async function createRoom() {
-                if (!currentUser) return;
-                
-                const destination = document.getElementById('destination').value;
-                if (!destination) {
-                    alert('Please enter a destination');
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('/api/rooms/create', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            userId: currentUser.id, 
-                            roomName: destination,
-                            destination: destination 
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (response.ok) {
-                        alert('Room created! Code: ' + data.roomCode);
-                    } else {
-                        alert('Error: ' + data.error);
-                    }
-                } catch (error) {
-                    alert('Connection error');
-                }
-            }
-            
-            async function joinRoom() {
-                if (!currentUser) return;
-                
-                const roomCode = document.getElementById('roomCode').value;
-                if (!roomCode) {
-                    alert('Please enter a room code');
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('/api/rooms/join', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            userId: currentUser.id, 
-                            roomCode: roomCode 
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (response.ok) {
-                        alert('Joined room successfully!');
-                    } else {
-                        alert('Error: ' + data.error);
-                    }
-                } catch (error) {
-                    alert('Connection error');
-                }
-            }
-        </script>
-    </body>
-    </html>
-    `);
+    try {
+        const htmlPath = path.join(__dirname, '../index.html');
+        const html = fs.readFileSync(htmlPath, 'utf8');
+        res.send(html);
+    } catch (error) {
+        console.error('Error serving index.html:', error);
+        res.status(500).send('<h1>MAARGA App</h1><p>Loading error. Please refresh.</p>');
+    }
 });
 
 // User registration/login
@@ -397,5 +279,16 @@ app.get('*', (req, res) => {
     res.redirect('/');
 });
 
-module.exports = app;
+// Start server (for local development)
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    connectDB().then(() => {
+        app.listen(PORT, () => {
+            console.log(`🚴‍♂️ MAARGA Server running on port ${PORT}`);
+            console.log(`📱 Access at: http://localhost:${PORT}`);
+            console.log(`🗄️ Database: ${isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Fallback'}`);
+        });
+    });
+}
 
+module.exports = app;
