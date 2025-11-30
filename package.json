@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "MAARGA - Biker Tracking App with 500m geo-fencing",
   "scripts": {
-    "start": "api/index.js",
+    "start": "node api/index.js",
     "dev": "nodemon server-mongo.js",
     "start-simple": "node server-simple.js",
     "serve-local": "python -m http.server 8000",
