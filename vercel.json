@@ -15,13 +15,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "server-monogo.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
