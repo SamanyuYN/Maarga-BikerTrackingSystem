@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "server-simple.js",
+      "src": "server-mongo.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server-simple.js"
+      "dest": "/server-mongo.js"
     },
     {
       "src": "/(.*)",
@@ -20,7 +20,7 @@
     "NODE_ENV": "production"
   },
   "functions": {
-    "server-simple.js": {
+    "server-monogo.js": {
       "maxDuration": 30
     }
   }
