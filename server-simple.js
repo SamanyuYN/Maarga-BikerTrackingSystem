@@ -381,12 +381,16 @@ setInterval(() => {
     }
 }, 60 * 60 * 1000);
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`🚴‍♂️ MAARGA Server running on port ${PORT}`);
-    console.log(`📱 Access at: http://localhost:${PORT}`);
-    console.log(`💡 This version uses in-memory storage (no database required)`);
-    console.log(`🚀 Ready for deployment to Heroku, Railway, Vercel, etc.`);
-});
+// For local development
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+        console.log(`🚴‍♂️ MAARGA Server running on port ${PORT}`);
+        console.log(`📱 Access at: http://localhost:${PORT}`);
+        console.log(`💡 This version uses in-memory storage (no database required)`);
+        console.log(`🚀 Ready for deployment to  Vercel, etc.`);
+    });
+}
 
-module.exports = { app, server };
+// For Vercel serverless deployment
+module.exports = app;
