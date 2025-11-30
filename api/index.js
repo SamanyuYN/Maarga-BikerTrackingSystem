@@ -4,6 +4,7 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 
@@ -15,11 +16,16 @@ const userLocations = new Map();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../')));
 
 // Serve main page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));
+    try {
+        const htmlPath = path.join(__dirname, '../index.html');
+        const html = fs.readFileSync(htmlPath, 'utf8');
+        res.send(html);
+    } catch (error) {
+        res.status(500).send('<h1>MAARGA App</h1><p>Loading error. Please try again.</p>');
+    }
 });
 
 // User registration/login
@@ -159,7 +165,13 @@ app.get('/api/health', (req, res) => {
 
 // Catch all other routes
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));
+    try {
+        const htmlPath = path.join(__dirname, '../index.html');
+        const html = fs.readFileSync(htmlPath, 'utf8');
+        res.send(html);
+    } catch (error) {
+        res.status(500).send('<h1>MAARGA App</h1><p>Loading error. Please try again.</p>');
+    }
 });
 
 module.exports = app;
